@@ -6,7 +6,7 @@ import { useAppContext } from '@/context/context'
 import DashboardLayout from '@/components/ui/dashboard'
 import Brand from '@/components/ui/brand'
 import { useSession } from 'next-auth/react'
-import { getUserByEmail } from '@/db/users'
+import { getUserByEmail } from '@/app/db/users'
 
 export default function ChatPage() {
   const { data: session } = useSession()

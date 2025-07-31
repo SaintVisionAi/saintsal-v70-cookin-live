@@ -1,11 +1,11 @@
 "use client"
 
 import { ChatbotUIContext } from "@/context/context"
-import { getProfileByUserId, updateProfile } from "@/db/profile"
+import { getProfileByUserId, updateProfile } from "@/app/db/profile"
 import {
   getHomeWorkspaceByUserId,
   getWorkspacesByUserId
-} from "@/db/workspaces"
+} from "@/app/db/workspaces"
 import {
   fetchHostedModels,
   fetchOpenRouterModels
