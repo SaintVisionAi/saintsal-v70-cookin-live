@@ -1,41 +1,48 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib'
-import { auth } from '@clerk/nextjs'
 
 export async function POST(req: NextRequest) {
-  const { userId } = auth()
-  if (!userId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
-  const { title, insights, tags, sendTo } = await req.json()
-
   try {
+    const { topic, points, tags = [] } = await req.json()
+
+    const systemPrompt = `
+You are SaintSal, co-founder of the Institute.
+Create a strategic, faith-aligned brief for the topic: ${topic}
+Include the following points: ${points?.join(', ')}.
+Summarize clearly, and tag with: ${tags.join(', ')}.
+Make it useful for leadership or client decision-making.
+Include forward-looking perspective.
+`
+
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+      },
+      method: 'POST',
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        stream: false,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: `Generate brief for: ${topic}` },
+        ],
+      }),
+    })
+
+    const json = await res.json()
+    const content = json.choices?.[0]?.message?.content?.trim()
+
     const pdfDoc = await PDFDocument.create()
     const page = pdfDoc.addPage([612, 792])
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica)
-    const { width, height } = page.getSize()
+    const fontSize = 12
 
-    const heading = `📊 SaintVision Institute Brief: ${title}`
-    page.drawText(heading, {
-      x: 50,
-      y: height - 50,
-      size: 18,
-      font,
-      color: rgb(0.2, 0.2, 0.2),
-    })
-
-    let y = height - 100
-    insights.forEach((insight: string, idx: number) => {
-      const text = `🧠 Insight ${idx + 1}: ${insight}`
-      page.drawText(text, {
-        x: 50,
-        y: y,
-        size: 12,
-        font,
-        color: rgb(0.1, 0.1, 0.1),
-      })
-      y -= 30
+    const wrapped = content.match(/(.|[\r\n]){1,500}/g) || []
+    let y = 750
+    wrapped.forEach((chunk: string) => {
+      page.drawText(chunk.trim(), { x: 50, y, size: fontSize, font })
+      y -= 20
     })
 
     const tagsText = `Tags: ${tags.join(', ')}`
@@ -49,7 +56,6 @@ export async function POST(req: NextRequest) {
 
     const pdfBytes = await pdfDoc.save()
 
-    // Optional: add email logic here to sendTo
     return new NextResponse(pdfBytes, {
       status: 200,
       headers: {
