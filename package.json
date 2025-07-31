@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@azure/search-documents": "^12.1.0",
     "@notionhq/client": "^4.0.1",
     "@prisma/client": "^6.13.0",
     "chart.js": "^4.5.0",
