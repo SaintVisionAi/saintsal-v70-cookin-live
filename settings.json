@@ -1,0 +1,7 @@
+{
+  "python.defaultInterpreterPath": ".venv/bin/python",
+  "editor.formatOnSave": true,
+  "eslint.enable": true,
+  "prettier.requireConfig": true,
+  "terminal.integrated.defaultProfile.osx": "zsh"
+}
